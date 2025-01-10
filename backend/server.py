@@ -1,4 +1,3 @@
-# server.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -85,6 +84,13 @@ def create_session():
 
     return jsonify({'session_id': new_session.id, 'name': new_session.name}), 201
 
+@app.route('/api/profile', methods=['GET'])
+@jwt_required()
+def get_profile():
+    user_id = get_jwt_identity()
+    user = User.query.filter_by(id=user_id).first()
+    return jsonify({'email': user.email, 'username': user.username}), 200
+
 @app.route('/api/sessions', methods=['GET'])
 @jwt_required()
 def get_sessions():
@@ -95,6 +101,47 @@ def get_sessions():
             {'id': session.id, 'name': session.name, 'created_at': session.created_at.isoformat()}
             for session in sessions
         ]), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 422
+
+@app.route('/api/sessions/<int:session_id>', methods=['PUT'])
+@jwt_required()
+def rename_session(session_id):
+    try:
+        user_id = get_jwt_identity()
+        data = request.json
+        new_name = data.get('name')
+
+        session = ChatSession.query.filter_by(id=session_id, user_id=user_id).first()
+        if not session:
+            return jsonify({'error': 'Session not found'}), 404
+
+        session.name = new_name
+        db.session.commit()
+
+        return jsonify({'id': session.id, 'name': session.name, 'created_at': session.created_at.isoformat()}), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 422
+
+@app.route('/api/sessions/<int:session_id>', methods=['DELETE'])
+@jwt_required()
+def delete_session(session_id):
+    try:
+        user_id = get_jwt_identity()
+
+        session = ChatSession.query.filter_by(id=session_id, user_id=user_id).first()
+        if not session:
+            return jsonify({'error': 'Session not found'}), 404
+
+        # Delete related chat history
+        ChatHistory.query.filter_by(session_id=session_id).delete()
+
+        db.session.delete(session)
+        db.session.commit()
+
+        return jsonify({'message': 'Session deleted successfully'}), 200
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 422

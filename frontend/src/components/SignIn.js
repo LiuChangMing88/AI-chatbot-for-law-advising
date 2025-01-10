@@ -48,7 +48,11 @@ const SignIn = () => {
           notify("Your password or your email is wrong", "error");
         }
       } catch (error) {
-        notify("Something went wrong", "error");
+        if (error.response && error.response.status === 401) {
+          notify("Wrong email or password", "error");
+        } else {
+          notify("Something went wrong", "error");
+        }
       } finally {
         setLoading(false);
       }

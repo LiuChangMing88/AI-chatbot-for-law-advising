@@ -2,10 +2,18 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { IoSend } from "react-icons/io5";
 import { CiLogout } from "react-icons/ci";
+import { FaUser, FaRobot } from "react-icons/fa";
 import ChatMessage from './ChatMessage';
 import ChatSession from './ChatSession';
+import NewSessionModal from './NewSessionModal';
+import RenameSessionModal from './RenameSessionModal';
+import DeleteSessionModal from './DeleteSessionModal';
 import './Chat.css';
 import { useNavigate } from 'react-router-dom';
+
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 
 function Chat() {
   const navigate = useNavigate();
@@ -14,19 +22,32 @@ function Chat() {
   const [chatLog, setChatLog] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
+  const [isNewSessionModalOpen, setIsNewSessionModalOpen] = useState(false);
+  const [isRenameSessionModalOpen, setIsRenameSessionModalOpen] = useState(false);
+  const [isDeleteSessionModalOpen, setIsDeleteSessionModalOpen] = useState(false);
+  const [sessionToRename, setSessionToRename] = useState(null);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
+  const [userEmail, setUserEmail] = useState('');
   const token = localStorage.getItem('token');
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/sessions', {
       headers: { Authorization: `Bearer ${token}` }
     }).then(response => {
-      console.log('Sessions:', response.data); // Log response for debugging
       setSessions(response.data);
     }).catch(error => {
       console.error('Error fetching chat sessions:', error.response?.data || error.message);
     });
+
+    axios.get('http://localhost:5000/api/profile', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(response => {
+      setUserEmail(response.data.email);
+    }).catch(error => {
+      console.error('Error fetching user profile:', error.response?.data || error.message);
+    });
   }, [token]);
-  
+
   const handleSessionChange = (session) => {
     setCurrentSession(session);
     axios.get(`http://localhost:5000/api/history/${session.id}`, {
@@ -38,8 +59,8 @@ function Chat() {
     });
   };
 
-  const handleNewSession = async () => {
-    const sessionName = prompt('Enter session name:');
+  const handleNewSession = async (sessionName) => {
+    setIsNewSessionModalOpen(true);
     if (sessionName) {
       try {
         const response = await axios.post('http://localhost:5000/api/sessions', { name: sessionName }, {
@@ -48,9 +69,56 @@ function Chat() {
         const newSession = response.data;
         setSessions([...sessions, newSession]);
         handleSessionChange(newSession);
+        window.location.reload();
       } catch (error) {
         console.error('Error creating new session:', error);
       }
+    }
+  };
+
+  const handleRenameSession = (session) => {
+    setSessionToRename(session);
+    setIsRenameSessionModalOpen(true);
+  };
+
+  const submitRenameSession = async (newName) => {
+    if (newName && newName !== sessionToRename.name) {
+      try {
+        const response = await axios.put(`http://localhost:5000/api/sessions/${sessionToRename.id}`, { name: newName }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const updatedSession = response.data;
+        setSessions(sessions.map(s => s.id === sessionToRename.id ? updatedSession : s));
+        if (currentSession.id === sessionToRename.id) {
+          setCurrentSession(updatedSession);
+        }
+        setIsRenameSessionModalOpen(false);
+        setSessionToRename(null);
+      } catch (error) {
+        console.error('Error renaming session:', error);
+      }
+    }
+  };
+
+  const handleDeleteSession = (session) => {
+    setSessionToDelete(session);
+    setIsDeleteSessionModalOpen(true);
+  };
+
+  const confirmDeleteSession = async (session) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/sessions/${session.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSessions(sessions.filter(s => s.id !== session.id));
+      if (currentSession.id === session.id) {
+        setCurrentSession(null);
+        setChatLog([]);
+      }
+      setIsDeleteSessionModalOpen(false);
+      setSessionToDelete(null);
+    } catch (error) {
+      console.error('Error deleting session:', error);
     }
   };
 
@@ -84,7 +152,7 @@ function Chat() {
   }
 
   return (
-    <div className="chat-container">
+    <div className={`chat-container ${isNewSessionModalOpen || isRenameSessionModalOpen || isDeleteSessionModalOpen ? 'dark-overlay' : ''}`}>
       <aside className="sidemenu">
         <div className="sidemenu-button" role="button" onClick={handleNewSession}>
           <span>+</span> New chat
@@ -96,6 +164,8 @@ function Chat() {
               session={session} 
               onClick={() => handleSessionChange(session)} 
               isActive={currentSession?.id === session.id} 
+              onRename={handleRenameSession}
+              onDelete={handleDeleteSession}
             />
           ))}
         </div>
@@ -104,6 +174,14 @@ function Chat() {
           <div className="logout-button-text">Log out</div>
         </div>
       </aside>
+      <div className="chat-header">
+        <div className="chat-header-user">
+          <span>{`${userEmail}`}</span>
+          <div className="chat-avatar">
+            <FaUser className='icon'/>
+          </div>
+        </div>
+      </div>
       <section className="chat">
         <div className="chat-log">
           {chatLog.map((message) => (
@@ -127,6 +205,23 @@ function Chat() {
           </form>
         </div>
       </section>
+      <NewSessionModal
+        isOpen={isNewSessionModalOpen}
+        onRequestClose={() => setIsNewSessionModalOpen(false)}
+        onSubmit={handleNewSession}
+      />
+      <RenameSessionModal
+        isOpen={isRenameSessionModalOpen}
+        onRequestClose={() => setIsRenameSessionModalOpen(false)}
+        onSubmit={submitRenameSession}
+        session={sessionToRename}
+      />
+      <DeleteSessionModal
+        isOpen={isDeleteSessionModalOpen}
+        onRequestClose={() => setIsDeleteSessionModalOpen(false)}
+        onDelete={confirmDeleteSession}
+        session={sessionToDelete}
+      />
     </div>
   );
 }

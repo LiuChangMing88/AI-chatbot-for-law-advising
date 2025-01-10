@@ -8,7 +8,7 @@ const ChatMessage = ({ message }) => {
       <div className="chat-avatar">
         {isAI ? <FaRobot className="icon" /> : <FaUser className="icon" />}
       </div>
-      <div className="chat-content">
+      <div className={`chat-content ${isAI ? "AI-chat" : "user-chat"}`}>
         {message.content}
       </div>
     </div>
