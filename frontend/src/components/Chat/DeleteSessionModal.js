@@ -19,7 +19,7 @@ const DeleteSessionModal = ({ isOpen, onRequestClose, onDelete, session }) => {
       overlayClassName="custom-modal-overlay"
     >
       <h2>Delete this session</h2>
-      <p>Are you sure you want to delete the session "{session?.name}"?</p>
+      <p>Are you sure you want to delete session "{session?.name}"?</p>
       <div className="modal-button-div">
         <button onClick={handleDelete}>Delete</button>
         <button onClick={onRequestClose}>Cancel</button>

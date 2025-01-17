@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from pythonLLM.LLM import get_response
+from pythonLLM.RAGLLM import LLMServe
 from dotenv import load_dotenv
 import os
 import traceback
@@ -29,6 +30,9 @@ app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
 # Set JWT expiration time
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=2)  # Set token expiration to 1 hour
+
+large_language_model = LLMServe()
+LLM_rag_pipeline = large_language_model.rag()
 
 from models import db, bcrypt, User, ChatSession, ChatHistory
 
@@ -161,15 +165,16 @@ def chat():
         db.session.add(new_message)
         db.session.commit()
 
-        response = get_response(messages)
-        ai_message = {'role': 'AI', 'content': response}
+        # Get RAG pipeline
+        response = LLM_rag_pipeline({"query": msg['content']})
+        response = response["result"]
 
         # Save AI response to chat history
         new_message = ChatHistory(session_id=session_id, role='AI', content=response)
         db.session.add(new_message)
         db.session.commit()
 
-        return jsonify({'response': response})
+        return jsonify({'response': response}), 200
     except Exception as e:
         print(f"Error: {e}")
         traceback.print_exc()

@@ -99,27 +99,87 @@
     position: relative;
     background-color: var(--surface-color-between-12);
     bottom: 0;
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .input-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   .chat-input {
-    flex: 1;
-    width: 800px;
-    height: 50px;
-    padding: 5px;
-    padding-left: 30px;
+    width: 790px;
+    height: 36px;
+    padding: 19px 5px 5px 40px;
     background-color: var(--surface-color-2);
     border: none;
-    border-radius: 50px;
+    border-radius: 30px;
     margin: 10px;
-    margin-bottom: 50px;
+    margin-bottom: 40px;
     color: white;
+    white-space: pre-wrap;
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+    font-size: 0.9rem;
+  }
+
+  .chat-input::-webkit-scrollbar {
+    width: 12px;
+    margin-left: -5px; /* Adjust this value as needed */
   }
   
+  .chat-input::-webkit-scrollbar-track {
+    background: none;
+  }
+  
+  .chat-input::-webkit-scrollbar-thumb {
+    background-color: var(--surface-color-3);
+    border-radius: 10px;
+    border: 3px solid var(--surface-color-2);
+  }
+
   .chat-input:focus {
     outline: none;
     background-color: var(--surface-color-2-hover);
   }
+
+  .send-button {
+    padding: 10px;
+    border: none;
+    border-radius: 50%;
+    margin-bottom: 30px;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    left: -60px;
+  }
   
+  .send-button:hover {
+    background-color: var(--surface-color-2-hover)
+  }
+  
+  .search-button {
+    padding: 10px;
+    border: none;
+    border-radius: 50%;
+    margin-bottom: 30px;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    left: -40px;
+  }
+  
+  .search-button:hover {
+    background-color: var(--surface-color-2-hover)
+  }
+
   .chat-log {
     flex: 1;
     padding: 24px;
@@ -128,7 +188,7 @@
   
   /* WebKit browsers */
   .chat-log::-webkit-scrollbar {
-    width: 12px;
+    width: 15px;
   }
   
   .chat-log::-webkit-scrollbar-track {
@@ -171,6 +231,7 @@
     background-color: var(--surface-color-2);
     text-align: left;
     line-height: 1.5;
+    white-space: pre-wrap;
   }
 
   .user-chat {
@@ -190,19 +251,6 @@
     font-size: 1.2rem;
   }
   
-  .send-button {
-    padding: 10px;
-    border: none;
-    border-radius: 50%;
-    background-color: transparent;
-    color: white;
-    cursor: pointer;
-  }
-  
-  .send-button:hover {
-    background-color: var(--surface-color-2-hover)
-  }
-
   .chat-session {
     padding: 6px;
     margin: 20px;
@@ -222,6 +270,8 @@
     color: var(--text-color);
     text-align: left;
     padding-left: 15px;
+    max-width: 200px;
+    overflow: hidden;
   }
 
   .chat-session-icon {
@@ -404,4 +454,36 @@
   .dropdown-item:hover {
     background-color: var(--surface-color-2-hover);
     color: var(--primary-color-4);
+  }
+
+  .context-modal {
+    height: 600px;
+  }
+
+  .context-message-box {
+    height: 400px; /* Adjust the height as needed */
+    overflow-y: auto;
+    color: var(--text-color);
+    font-size: 1rem;
+  }
+
+  .context-message {
+    padding-right: 40px;
+    white-space: pre-wrap; /* Preserve whitespace */
+    word-wrap: break-word; /* Break long words */
+  }
+
+
+  .context-message-box::-webkit-scrollbar {
+    width: 15px;
+  }
+  
+  .context-message-box::-webkit-scrollbar-track {
+    background: var(--surface-color-between-12);
+  }
+  
+  .context-message-box::-webkit-scrollbar-thumb {
+    background-color: var(--surface-color-3);
+    border-radius: 10px;
+    border: 3px solid var(--surface-color-2);
   }

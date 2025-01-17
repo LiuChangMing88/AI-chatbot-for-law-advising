@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { IoSend } from "react-icons/io5";
 import { CiLogout } from "react-icons/ci";
 import { FaUser, FaRobot } from "react-icons/fa";
+import { FaMagnifyingGlass } from "react-icons/fa6";
 import ChatMessage from './ChatMessage';
 import ChatSession from './ChatSession';
 import NewSessionModal from './NewSessionModal';
 import RenameSessionModal from './RenameSessionModal';
 import DeleteSessionModal from './DeleteSessionModal';
+import ChatContextModal from './ChatContextModal';
 import './Chat.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,10 +27,12 @@ function Chat() {
   const [isNewSessionModalOpen, setIsNewSessionModalOpen] = useState(false);
   const [isRenameSessionModalOpen, setIsRenameSessionModalOpen] = useState(false);
   const [isDeleteSessionModalOpen, setIsDeleteSessionModalOpen] = useState(false);
+  const [isChatContextModalOpen, setIsChatContextModalOpen] = useState(false);
   const [sessionToRename, setSessionToRename] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [userEmail, setUserEmail] = useState('');
   const token = localStorage.getItem('token');
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/sessions', {
@@ -47,6 +51,30 @@ function Chat() {
       console.error('Error fetching user profile:', error.response?.data || error.message);
     });
   }, [token]);
+
+  const handleKeyDown = (e) => {
+    if (e.shiftKey && e.key === 'Enter') {
+      e.preventDefault();
+      setInput(`${input}\n`);
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea.scrollHeight > 61) {
+      textarea.style.height = `45px`;
+      textarea.style.padding= `12px 5px 12px 40px`;
+    }
+    if (input === '') {
+      textarea.style.height = '36px';
+      textarea.style.padding = '19px 5px 5px 40px';
+    }
+  };
+
 
   const handleSessionChange = (session) => {
     setCurrentSession(session);
@@ -68,7 +96,6 @@ function Chat() {
         });
         const newSession = response.data;
         setSessions([...sessions, newSession]);
-        handleSessionChange(newSession);
         window.location.reload();
       } catch (error) {
         console.error('Error creating new session:', error);
@@ -152,7 +179,7 @@ function Chat() {
   }
 
   return (
-    <div className={`chat-container ${isNewSessionModalOpen || isRenameSessionModalOpen || isDeleteSessionModalOpen ? 'dark-overlay' : ''}`}>
+    <div className={`chat-container ${isNewSessionModalOpen || isRenameSessionModalOpen || isDeleteSessionModalOpen || isChatContextModalOpen ? 'dark-overlay' : ''}`}>
       <aside className="sidemenu">
         <div className="sidemenu-button" role="button" onClick={handleNewSession}>
           <span>+</span> New chat
@@ -192,15 +219,25 @@ function Chat() {
         </div>
         <div className="chat-input-div">
           <form onSubmit={handleSubmit} className="input-form">
-            <input
-              className="chat-input"
-              placeholder="Type a message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={isLoading}
-            />
+            <textarea
+                ref={textareaRef}
+                className="chat-input"
+                placeholder="Type a message..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onInput={adjustTextareaHeight}
+                disabled={isLoading}
+              />
             <button type="submit" className="send-button">
               <IoSend />
+            </button>
+            <button 
+              type="button" 
+              className="search-button"
+              onClick={() => setIsChatContextModalOpen(true)}
+            >
+              <FaMagnifyingGlass />
             </button>
           </form>
         </div>
@@ -222,6 +259,11 @@ function Chat() {
         onDelete={confirmDeleteSession}
         session={sessionToDelete}
       />
+      <ChatContextModal
+        isOpen={isChatContextModalOpen}
+        onRequestClose={() => setIsChatContextModalOpen(false)}
+        message={chatLog[chatLog.length - 1]}
+        />
     </div>
   );
 }

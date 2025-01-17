@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import Chat from './components/Chat/Chat';
-import './App.css';
 
 function App() {
   const navigate = useNavigate();
