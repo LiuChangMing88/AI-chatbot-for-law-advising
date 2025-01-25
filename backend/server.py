@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from pythonLLM.LLM import get_response
-from pythonLLM.RAGLLM import LLMServe
+from pythonLLM.HybridSearch import get_response
 from dotenv import load_dotenv
 import os
 import traceback
@@ -21,7 +20,7 @@ app.config['DEBUG'] = True
 app.logger.setLevel(logging.INFO)
 
 # Configure database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://chatbot_user:password@localhost/chatbot_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://chatbot_user:password@db/chatbot_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = jwt_key
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
@@ -30,9 +29,6 @@ app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
 # Set JWT expiration time
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=2)  # Set token expiration to 1 hour
-
-large_language_model = LLMServe()
-LLM_rag_pipeline = large_language_model.rag()
 
 from models import db, bcrypt, User, ChatSession, ChatHistory
 
@@ -166,8 +162,21 @@ def chat():
         db.session.commit()
 
         # Get RAG pipeline
-        response = LLM_rag_pipeline({"query": msg['content']})
-        response = response["result"]
+        original_response = get_response(msg['content'])
+        response = original_response["result"]
+
+        # Cut out all the part before "### Câu trả lời của bạn:"" in response
+        if "### Câu trả lời của bạn:" in response:
+            response = response.split("### Câu trả lời của bạn:")[1]
+
+        response += "\n\nSOURCES OF INFORMATION:\n"
+        for doc in original_response["source_documents"]:
+            metadata = doc.metadata  # Access the metadata dictionary
+            title = metadata.get("title", "No Title")
+            law_id = metadata.get("law_id", "No Law ID")
+            content = doc.page_content
+            response += f"- {title} (Law ID: {law_id})\n"
+            response += f"  Content: {content}\n\n"  # Print a snippet of the page content for better readability
 
         # Save AI response to chat history
         new_message = ChatHistory(session_id=session_id, role='AI', content=response)
@@ -190,4 +199,4 @@ def history(session_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, use_reloader=False)

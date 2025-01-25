@@ -9,7 +9,7 @@ import ChatSession from './ChatSession';
 import NewSessionModal from './NewSessionModal';
 import RenameSessionModal from './RenameSessionModal';
 import DeleteSessionModal from './DeleteSessionModal';
-import ChatContextModal from './ChatContextModal';
+import ChatSourcesModal from './ChatSourcesModal';
 import './Chat.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,7 +27,7 @@ function Chat() {
   const [isNewSessionModalOpen, setIsNewSessionModalOpen] = useState(false);
   const [isRenameSessionModalOpen, setIsRenameSessionModalOpen] = useState(false);
   const [isDeleteSessionModalOpen, setIsDeleteSessionModalOpen] = useState(false);
-  const [isChatContextModalOpen, setIsChatContextModalOpen] = useState(false);
+  const [isChatSourcesModalOpen, setIsChatSourcesModalOpen] = useState(false);
   const [sessionToRename, setSessionToRename] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [userEmail, setUserEmail] = useState('');
@@ -178,8 +178,17 @@ function Chat() {
     navigate('/signin');
   }
 
+  const handleClickBackGround = () => {
+    setIsNewSessionModalOpen(false);
+    setIsRenameSessionModalOpen(false);
+    setIsDeleteSessionModalOpen(false);
+    setIsChatSourcesModalOpen(false);
+  }
+
   return (
-    <div className={`chat-container ${isNewSessionModalOpen || isRenameSessionModalOpen || isDeleteSessionModalOpen || isChatContextModalOpen ? 'dark-overlay' : ''}`}>
+    <div 
+    className={`chat-container ${isNewSessionModalOpen || isRenameSessionModalOpen || isDeleteSessionModalOpen || isChatSourcesModalOpen ? 'dark-overlay' : ''}`}
+    >
       <aside className="sidemenu">
         <div className="sidemenu-button" role="button" onClick={handleNewSession}>
           <span>+</span> New chat
@@ -235,7 +244,7 @@ function Chat() {
             <button 
               type="button" 
               className="search-button"
-              onClick={() => setIsChatContextModalOpen(true)}
+              onClick={() => setIsChatSourcesModalOpen(true)}
             >
               <FaMagnifyingGlass />
             </button>
@@ -259,9 +268,9 @@ function Chat() {
         onDelete={confirmDeleteSession}
         session={sessionToDelete}
       />
-      <ChatContextModal
-        isOpen={isChatContextModalOpen}
-        onRequestClose={() => setIsChatContextModalOpen(false)}
+      <ChatSourcesModal
+        isOpen={isChatSourcesModalOpen}
+        onRequestClose={() => setIsChatSourcesModalOpen(false)}
         message={chatLog[chatLog.length - 1]}
         />
     </div>

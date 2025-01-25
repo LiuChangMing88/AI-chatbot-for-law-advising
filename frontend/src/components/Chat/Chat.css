@@ -456,33 +456,34 @@
     color: var(--primary-color-4);
   }
 
-  .context-modal {
+  .sources-modal {
     height: 600px;
   }
 
-  .context-message-box {
+  .sources-message-box {
     height: 400px; /* Adjust the height as needed */
     overflow-y: auto;
     color: var(--text-color);
     font-size: 1rem;
   }
 
-  .context-message {
+  .sources-message {
     padding-right: 40px;
     white-space: pre-wrap; /* Preserve whitespace */
     word-wrap: break-word; /* Break long words */
+    line-height: 1.5;
   }
 
 
-  .context-message-box::-webkit-scrollbar {
+  .sources-message-box::-webkit-scrollbar {
     width: 15px;
   }
   
-  .context-message-box::-webkit-scrollbar-track {
+  .sources-message-box::-webkit-scrollbar-track {
     background: var(--surface-color-between-12);
   }
   
-  .context-message-box::-webkit-scrollbar-thumb {
+  .sources-message-box::-webkit-scrollbar-thumb {
     background-color: var(--surface-color-3);
     border-radius: 10px;
     border: 3px solid var(--surface-color-2);

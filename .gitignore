@@ -98,3 +98,6 @@ $RECYCLE.BIN/
 
 # Linux
 *~
+
+# Training data
+legal_corpus.json

@@ -1,0 +1,8 @@
+pydantic
+typing
+mysql-connector-python
+flask_sqlalchemy
+flask
+bcrypt
+flask-bcrypt
+pymysql
